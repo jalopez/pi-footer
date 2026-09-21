@@ -85,7 +85,10 @@ async function fetchGitInfo({ pi, cwd, branchHint }: GitFetch): Promise<GitInfo 
 }
 
 async function git(pi: ExtensionAPI, cwd: string, args: string[]): Promise<string | null> {
-  const { stdout, code, killed } = await pi.exec("git", args, { cwd, timeout: 500 });
+  const { stdout, code, killed } = await pi.exec("git", ["--no-optional-locks", ...args], {
+    cwd,
+    timeout: 500,
+  });
   // trimEnd, not trim: `status --porcelain=v1` encodes staged vs unstaged in columns 1/2, so the
   // leading space of the first line is significant. trim() would strip it and miscount that file.
   return code !== 0 || killed ? null : stdout.trimEnd() || null;
