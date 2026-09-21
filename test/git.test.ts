@@ -21,7 +21,7 @@ const REPO_OUTPUT: Record<string, string> = {
 // A pi.exec that resolves canned git output, overriding the toplevel path per test.
 function gitExec(rootPath = "/repo") {
   return vi.fn<ExecMock>(async (_command, args) => {
-    const key = args.join(" ");
+    const key = (args[0] === "--no-optional-locks" ? args.slice(1) : args).join(" ");
     const output = key === "rev-parse --show-toplevel" ? rootPath : REPO_OUTPUT[key];
     if (output === undefined) return { stdout: "", stderr: "unexpected", code: 1, killed: false };
     return { stdout: output, stderr: "", code: 0, killed: false };
@@ -57,6 +57,19 @@ afterEach(() => {
 });
 
 describe("loadGitInfo", () => {
+  it("disables optional locks for every background git command", async () => {
+    const exec = gitExec();
+
+    await loadGitInfo(piWith(exec), "/repo", null);
+
+    expect(exec).toHaveBeenCalledTimes(7);
+    for (const [command, args, options] of exec.mock.calls) {
+      expect(command).toBe("git");
+      expect(args[0]).toBe("--no-optional-locks");
+      expect(options).toEqual({ cwd: "/repo", timeout: 500 });
+    }
+  });
+
   it("loads and parses git info for a repo", async () => {
     const exec = gitExec();
 
@@ -67,7 +80,7 @@ describe("loadGitInfo", () => {
     expect(exec).toHaveBeenCalledTimes(6);
     expect(exec).not.toHaveBeenCalledWith(
       "git",
-      ["rev-parse", "--abbrev-ref", "HEAD"],
+      ["--no-optional-locks", "rev-parse", "--abbrev-ref", "HEAD"],
       expect.anything(),
     );
   });
@@ -80,7 +93,7 @@ describe("loadGitInfo", () => {
     expect(info.branch).toBe("main");
     expect(exec).toHaveBeenCalledWith(
       "git",
-      ["rev-parse", "--abbrev-ref", "HEAD"],
+      ["--no-optional-locks", "rev-parse", "--abbrev-ref", "HEAD"],
       expect.anything(),
     );
   });
