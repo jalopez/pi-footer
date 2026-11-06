@@ -80,6 +80,14 @@ Settings are persisted to:
 
 Override with `PI_FOOTER_CONFIG=/path/to/settings.json`.
 
+### Herdr terminals
+
+When `HC_TERMINAL_ID` is set, interactive Pi sessions render an empty footer:
+Herdr's native status strips replace both pi-footer and Pi's built-in footer.
+Other terminals keep the configured footer. Global settings are neither read nor
+changed in Herdr, and `/footer` is not registered there. Reload Pi after updating
+the extension. RPC, JSON and print modes do not receive a footer override.
+
 ## Presets
 
 Presets are starting points. After applying one, you can edit lines, widgets, separators, colors, icons, and terminal behavior in the config UI.

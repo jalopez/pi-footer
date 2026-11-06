@@ -32,6 +32,18 @@ interface FooterDataLike {
 }
 
 export default async function statuslineExtension(pi: ExtensionAPI): Promise<void> {
+  if (process.env.HC_TERMINAL_ID) {
+    pi.on("session_start", (_event, ctx) => {
+      if (ctx.mode === "tui") {
+        ctx.ui.setFooter(() => ({ render: () => [], invalidate() {} }));
+      }
+    });
+    pi.on("session_shutdown", (_event, ctx) => {
+      if (ctx.mode === "tui") ctx.ui.setFooter(undefined);
+    });
+    return;
+  }
+
   let config = await loadConfig();
   let widgetStore = WidgetStore.fromConfig(config);
   const eventWidgets = new EventWidgetValues();
